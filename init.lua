@@ -160,9 +160,9 @@ local function exec_paging_html(command, node, ...)
 end
 
 local function exec_custom(command, node)
-	command = command:gsub("{}", '"' .. node.absolute_path .. '"')
+	command = command:gsub("{}", '"' .. node.absolute_path .. '" &')
 
-	return {{ BashExec = command }}
+	return {{ BashExecSilently = command }}
 end
 
 
@@ -233,19 +233,17 @@ local function open(ctx)
 
 	if node.is_dir or (node.is_symlink and node.symlink.is_dir) then
 		return {"Enter"}
-	end
-
-	if node.is_dir == false or (node.is_symlink and node.symlink.is_dir == false) then
+	else
+		if node_mime == "" then
+			local node_mime_empty_handle = io.popen("file --mime-type -b " .. node.absolute_path)
+			local node_mime_empty_result = node_mime_empty_handle:read("*a")
+			node_mime_empty_handle:close()
+			node_mime = node_mime_empty_result
+		end
 		for _,entry in ipairs(open_custom_commands) do
 			local command = entry["command"]
 			if command ~= nil then
-				if get_node_extension(node) == entry["extension"] then
-					return exec_custom(command, node)
-				end
-				if node_mime == entry["mime"] then
-					return exec_custom(command, node)
-				end
-				if entry["mime_regex"] ~= nil and node_mime:match(entry["mime_regex"]) then
+				if get_node_extension(node) == entry["extension"] or node_mime == entry["mime"] or (entry["mime_regex"] ~= nil and node_mime:match(entry["mime_regex"])) then
 					return exec_custom(command, node)
 				end
 			end
