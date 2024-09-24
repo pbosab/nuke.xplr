@@ -16,7 +16,7 @@ local nuke_mode = {
 }
 
 local function exec_custom(command, node)
-	command = command:gsub("{}", '"' .. node.absolute_path .. '" &')
+	command = command:gsub("{}", '"' .. string.gsub(node.absolute_path,"%$","\\$") .. '" &')
 	return { { BashExecSilently = command } }
 end
 
@@ -29,7 +29,8 @@ local function open(ctx)
 	else
 		-- prevent empty mime
 		if node_mime == "" then
-			local node_mime_empty_handle = io.popen("file --mime-type -b " .. node.absolute_path)
+			-- FIX SPECIAL CHARACTERS! $/\ etc
+			local node_mime_empty_handle = io.popen("file --mime-type -b " .. string.gsub(node.absolute_path,"%$","\\$"))
 			local node_mime_empty_result = node_mime_empty_handle:read("*a")
 			node_mime_empty_handle:close()
 			node_mime = node_mime_empty_result
