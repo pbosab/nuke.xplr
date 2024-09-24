@@ -29,7 +29,6 @@ local function open(ctx)
 	else
 		-- prevent empty mime
 		if node_mime == "" then
-			-- FIX SPECIAL CHARACTERS! $/\ etc
 			local node_mime_empty_handle = io.popen("file --mime-type -b " .. string.gsub(node.absolute_path,"%$","\\$"))
 			local node_mime_empty_result = node_mime_empty_handle:read("*a")
 			node_mime_empty_handle:close()
